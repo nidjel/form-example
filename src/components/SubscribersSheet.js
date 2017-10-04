@@ -7,7 +7,7 @@ class SubscribersSheet extends Component {
       <div>
         <h3>Люди</h3>
         <ul>
-          {people.map((p, i) => <li key={i}>{p.name} зарегиcтрировался на курс: {p.course} ({p.faculty} факультет)</li>)}
+          {people.map((p, i) => <li key={i}>{p.name} зарегиcтрировался на курс: {p.course} ({p.faculty} факультет). Email: {p.email}</li>)}
         </ul>
       </div>
     )

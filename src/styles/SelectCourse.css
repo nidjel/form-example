@@ -1,0 +1,20 @@
+.select {
+  border-radius: 5px;
+  margin-bottom: 20px;
+  height: 30px;
+}
+
+select > option {
+  border: 0;
+  height: 31px;
+  width: 220px;
+}
+
+.select> select {
+  color: black;
+  font-size: 14px;
+  font-family: 'Helvetica Neue', Helvetica, sans-serif;
+  line-height: 2.5;
+  border: 0;
+  overflow: hidden;
+}

@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 import SignUpFormForCourse from './SignUpFormForCourse'
 import SubscribersSheet from './SubscribersSheet'
-import '../styles/App.css';
+import '../styles/App.css'
 
 class App extends Component {
   state = {

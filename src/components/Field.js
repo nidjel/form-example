@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
+import '../styles/Field.css'
 
 class Field extends Component {
   state = {
@@ -22,12 +23,12 @@ class Field extends Component {
       this.setState({
         value,
         errorMessage
-      }, () => this.props.onChange({target: {value, name: this.props.name}}, errorMessage))
+      }, () => this.props.onChange(this.props.name, value, errorMessage))
     } else {
       this.setState({
         value,
         errorMessage: ''
-      }, () => this.props.onChange({target: {value, name: this.props.name}}, errorMessage))
+      }, () => this.props.onChange(this.props.name, value, errorMessage, errorMessage))
     }
   }
   
@@ -37,8 +38,8 @@ class Field extends Component {
     
     return (
       <div>
-        <input type='text' name={name} placeholder={placeholder} value={value} onChange={this.handleChange} />{' '}
-        <span>{errorMessage}</span><br/>
+        <input className='input' type='text' name={name} placeholder={placeholder} value={value} onChange={this.handleChange} /><br/>
+        <span style={{color: 'red', fontSize: '12px'}}>{errorMessage}</span><br/>
       </div>
     )
   }
