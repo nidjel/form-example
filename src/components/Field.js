@@ -7,11 +7,11 @@ class Field extends Component {
     errorMessage: ''
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.value !== this.state.value) {
+  componentWillReceiveProps(update) {
+    if (update.value !== this.state.value) {
       this.setState({
         ...this.state,
-        value: nextProps.value
+        value: update.value
       })
     }
   }

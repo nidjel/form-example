@@ -70,7 +70,7 @@ class SignUpFormForCourse extends Component {
   }
 
   render() {
-    const {fields:{name, email}} = this.state;
+    const {fields:{name, email, faculty, course}} = this.state;
     
     return (
       <div className='form-container'>
@@ -91,6 +91,8 @@ class SignUpFormForCourse extends Component {
             onChange={this.handleChange}
           />
           <SelectCourse
+            faculty={faculty}
+            course={course}
             onChange={this.handleChange}
           />
           {{

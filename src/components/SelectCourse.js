@@ -6,12 +6,15 @@ class SelectCourse extends Component {
   state = {
     faculties: [],
     courses: [],
-    faculty: '',
-    course: '',
+    faculty: this.props.faculty || '',
+    course: this.props.course || '',
     _loading: null,
   }
 
   componentDidMount() {
+    this.setState({
+      _loading: 'loading',
+    })
     client.getFaculties((err, faculties) => {
       if (err) {
         this.setState({
@@ -19,10 +22,20 @@ class SelectCourse extends Component {
         })
       } else {
         this.setState({
-          faculties
+          faculties,
+          _loading: 'loaded'
         })
       }
     })
+  }
+
+  componentWillReceiveProps({faculty, course}) {
+    if (faculty !== this.state.faculty || course !== this.state.course) {
+      this.setState({
+        faculty,
+        course
+      })
+    }  
   }
 
   handleChange = (e) => {
@@ -42,46 +55,56 @@ class SelectCourse extends Component {
   }
   
   render() {
-    const {faculties, courses, _loading, faculty} = this.state;
-    let facultySelect, courseSelect;
+    const {faculties, courses, _loading, faculty, course} = this.state;
     
-    if (_loading === 'loading') {
-      facultySelect = (<span>загрузка...</span>)
-    } else if (_loading === 'error') {
-      facultySelect = (<span>ошибка сервера</span>)
-    } else {
-      facultySelect = (
-        <select name='faculty' onChange={this.handleChange}>
-          <option value={''}>Выберите факультет</option>
-          {faculties.map((f, i) => <option key={i} value={f}>{f}</option>)}
-        </select>
-      )
+    const renderFacultySelect = () => {
+      let facultySelect
+      if (_loading === 'loading') {
+        facultySelect = (<span>загрузка...</span>)
+      } else if (_loading === 'error') {
+        facultySelect = (<span>ошибка сервера</span>)
+      } else if (_loading === 'loaded') {
+        facultySelect = (
+          <select name='faculty' value={faculty} onChange={this.handleChange}>
+            <option value={''}>Выберите факультет</option>
+            {faculties.map((f, i) => <option key={i} value={f}>{f}</option>)}
+          </select>
+        )
+      } else {
+        facultySelect = null
+      }
+      return facultySelect
     }
     
-    if (faculty && !courses.length) {
-      courseSelect = (<span>загрузка...</span>)
-      client.getCourses(faculty, (err, courses) => {
-        if (err) {
-          courseSelect = (<span>ошибка сервера</span>)
-        } else {
-          this.setState({courses})
-        }
-      })
-    } else if (courses.length > 0) {
-      courseSelect = (
-        <select name='course' onChange={this.handleChange}>
-          <option value={''}>Выберите курс</option>
-          {courses.map((c, i) => <option key={i} value={c}>{c}</option>)}
-        </select>
-      )
-    } else {
-      courseSelect = null
+    const renderCourseSelect = () => {
+      let courseSelect
+      if (faculty && !courses.length) {
+        courseSelect = (<span>загрузка...</span>)
+        client.getCourses(faculty, (err, courses) => {
+          if (err) {
+            courseSelect = (<span>ошибка сервера</span>)
+          } else {
+            this.setState({courses})
+          }
+        })
+      } else if (courses.length > 0) {
+        courseSelect = (
+          <select name='course' value={course} onChange={this.handleChange}>
+            <option value={''}>Выберите курс</option>
+            {courses.map((c, i) => <option key={i} value={c}>{c}</option>)}
+          </select>
+        )
+      } else {
+        courseSelect = null
+      }
+      return courseSelect
     }
+    
     
     return (
       <div className='select'>
-        {facultySelect}<br/>
-        {courseSelect}<br/>
+        {renderFacultySelect()}<br/>
+        {renderCourseSelect()}<br/>
       </div>
     )
   }
