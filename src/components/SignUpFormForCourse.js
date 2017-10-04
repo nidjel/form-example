@@ -1,28 +1,6 @@
 import React, { Component } from 'react';
-import './App.css';
-
-let client;
-
-class App extends Component {
-  state = {
-    people: []
-  }
-  
-  handleSavePerson = (person) => {
-    this.setState({
-      people: [...this.state.people, person]
-    })
-  }  
-
-  render() {
-    return (
-      <div className="App">
-        <SignUpFormForCourse onSavePerson={this.handleSavePerson} />
-        <SubscribersSheet people={this.state.people} />
-      </div>
-    );
-  }
-}
+import Field from './Field'
+import client from '../helpers/client'
 
 class SignUpFormForCourse extends Component {
   state = {
@@ -66,8 +44,6 @@ class SignUpFormForCourse extends Component {
     e.preventDefault()
     if (this.validate()) {
       this.savePerson()
-    } else {
-      
     }
   }
   
@@ -75,7 +51,7 @@ class SignUpFormForCourse extends Component {
     this.setState({_loading: 'loading'})
     client.getFaculties((err, faculties) => {
       if (err) {
-        this.setState({faculties, _loading: 'error'})
+        this.setState({_loading: 'error'})
       } else {
         this.setState({faculties, _loading: 'loaded'})
       }
@@ -181,93 +157,4 @@ class SignUpFormForCourse extends Component {
   }
 }
 
-class SubscribersSheet extends Component {
-  render() {
-    const {people} = this.props
-    return (
-      <div>
-        <h3>Люди</h3>
-        <ul>
-          {people.map((p, i) => <li key={i}>{p.name} зарегиcтрировался на курс: {p.course} ({p.faculty} факультет)</li>)}
-        </ul>
-      </div>
-    )
-  }
-}
-
-class Field extends Component {
-  state = {
-    value: this.props.value || '',
-    errorMessage: ''
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.value !== this.state.value) {
-      this.setState({
-        ...this.state,
-        value: nextProps.value
-      })
-    }
-  }
-
-  handleChange = (e) => {
-    const value = e.target.value
-    const errorMessage = this.props.validate(value)
-    if (errorMessage) {
-      this.setState({
-        value,
-        errorMessage
-      }, () => this.props.onChange({target: {value, name: this.props.name}}, errorMessage))
-    } else {
-      this.setState({
-        value,
-        errorMessage: ''
-      }, () => this.props.onChange({target: {value, name: this.props.name}}, errorMessage))
-    }
-  }
-  
-  render() {
-    const {name, placeholder} = this.props;
-    const {value, errorMessage} = this.state;
-    
-    return (
-      <div>
-        <input type='text' name={name} placeholder={placeholder} value={value} onChange={this.handleChange} />{' '}
-        <span>{errorMessage}</span><br/>
-      </div>
-    )
-  }
-}
-
-client = (function() {
-  const getFaculties = (cb) => {
-    setTimeout(() => cb(null, ['физический', 'исторический', 'философский']), 1000)
-  }
-  const getCourses = (faculty, cb) => {
-    let courses;
-    switch(faculty) {
-      case 'физический': 
-        courses = ['квантовая физика', 'термодинамика', 'космология']
-        break
-      case 'исторический':
-        courses = ['история россии', 'история сша', 'история европы'] 
-        break
-      case 'философский':
-        courses = ['философия древней греции', 'философия Шопенгауэра', 'философия Декарта']
-        break
-      default:
-        courses = ['курсов нет']
-    }
-    setTimeout(() => cb(null, courses), 1000)
-  }
-  const savePerson = (person, cb) => {
-    setTimeout(() => cb(null), 1000)
-  }
-  return {
-    getFaculties,
-    getCourses,
-    savePerson
-  }
-})()
-
-export default App;
+export default SignUpFormForCourse
