@@ -35,19 +35,25 @@ class SignUpFormForCourse extends Component {
       course: '',
     },
     fieldErrors: {},
-    _loading: null
+    _loading: null,
+    _saveStatus: 'READY'
   }
 
   componentDidMount() {
    this.loadData()
   }
 
-  handleChange = (e) => {
+  handleChange = (e, fieldError) => {
     this.setState({
       fields: {
         ...this.state.fields,
         [e.target.name]: e.target.value
-      }
+      },
+      fieldErrors: {
+        ...this.state.fieldErrors,
+        [e.target.name]: fieldError
+      },
+      _saveStatus: 'READY'
     })
     if (e.target.name === 'faculty') {
       this.setState({
@@ -78,7 +84,8 @@ class SignUpFormForCourse extends Component {
   
   validate = () => {
     const values = Object.values(this.state.fields)
-    if (values.every(v => v)) {
+    const fieldErrors = Object.values(this.state.fieldErrors)
+    if (values.every(v => v) && !fieldErrors.some(v => v)) {
       return true
     } else {
       return false
@@ -86,39 +93,54 @@ class SignUpFormForCourse extends Component {
   }
   
   savePerson = () => {
-    this.props.onSavePerson(this.state.fields)
+    const person = this.state.fields
+    this.setState({
+      _saveStatus: 'SAVING'
+    })
+    client.savePerson(person, (err) => {
+      if (err) {
+        this.setState({
+          _saveStatus: 'ERROR'
+        })
+      } else {
+        this.setState({
+          _saveStatus: 'SAVED'
+        })
+        this.props.onSavePerson(person)
+      }
+    })
   }
 
   render() {
-    const {faculties, courses, _loading, fields:{faculty}} = this.state;
+    const {faculties, courses, _loading, fields:{faculty, name, email}} = this.state;
     let facultySelect, courseSelect;
     
     if (_loading === 'loading') {
-      facultySelect = (<span>loading...</span>)
+      facultySelect = (<span>загрузка...</span>)
     } else if (_loading === 'error') {
-      facultySelect = (<span>Server error</span>)
+      facultySelect = (<span>ошибка сервера</span>)
     } else {
       facultySelect = (
-        <select name='faculty'>
-          <option value={''}>Select faculty</option>
+        <select name='faculty' onChange={this.handleChange}>
+          <option value={''}>Выберите факультет</option>
           {faculties.map((f, i) => <option key={i} value={f}>{f}</option>)}
         </select>
       )
     }
     
     if (faculty && !courses.length) {
-      courseSelect = (<span>loading...</span>)
+      courseSelect = (<span>загрузка...</span>)
       client.getCourses(faculty, (err, courses) => {
         if (err) {
-          courseSelect = (<span>Server error</span>)
+          courseSelect = (<span>ошибка сервера</span>)
         } else {
           this.setState({courses})
         }
       })
     } else if (courses.length > 0) {
       courseSelect = (
-        <select name='course'>
-          <option value={''}>Select course</option>
+        <select name='course' onChange={this.handleChange}>
+          <option value={''}>Выберите курс</option>
           {courses.map((c, i) => <option key={i} value={c}>{c}</option>)}
         </select>
       )
@@ -128,15 +150,31 @@ class SignUpFormForCourse extends Component {
     
     return (
       <div>
-        <h2>Sign Up Form</h2>
-        <form onChange={this.handleChange} onSubmit={this.handleSubmit} >
-          <input type='text' name='name' placeholder='name' value={this.state.name} />
-          <span>{this.state.fieldErrors.name}</span><br/>
-          <input type='text' name='email' placeholder='email' value={this.state.email} />
-          <span>{this.state.fieldErrors.email}</span><br/>
+        <h2>Форма регистрации</h2>
+        <form onSubmit={this.handleSubmit} >
+          <Field 
+            name='name' 
+            placeholder='Ваше имя' 
+            value={name} 
+            validate={(val) => val ? null : 'введите корректное имя'}
+            onChange={this.handleChange}
+          />
+          <Field 
+            name='email' 
+            placeholder='Ваш email' 
+            value={email} 
+            validate={(val) => val ? null : 'введите корректный email'}
+            onChange={this.handleChange}
+          />
           {facultySelect}<br/>
           {courseSelect}<br/>
-          <button type='submit'>Submit</button>
+          {{
+            READY: <button type='submit' disabled={!this.validate()}>Записаться</button>,
+            SAVING: <button type='submit' disabled>Сохраняю...</button>,
+            ERROR: <button type='submit' disabled={!this.validate()}>Попробуйте снова</button>,
+            SAVED: <button type='submit' disabled>Сохранено</button>,
+          }[this.state._saveStatus]}
+
         </form>
       </div>
     )
@@ -148,10 +186,54 @@ class SubscribersSheet extends Component {
     const {people} = this.props
     return (
       <div>
-        <h3>People</h3>
+        <h3>Люди</h3>
         <ul>
-          {people.map((p, i) => <li key={i}>{p.name} зарегертрировался на курс: {p.course} ({p.faculty} факультет)</li>)}
+          {people.map((p, i) => <li key={i}>{p.name} зарегиcтрировался на курс: {p.course} ({p.faculty} факультет)</li>)}
         </ul>
+      </div>
+    )
+  }
+}
+
+class Field extends Component {
+  state = {
+    value: this.props.value || '',
+    errorMessage: ''
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.value !== this.state.value) {
+      this.setState({
+        ...this.state,
+        value: nextProps.value
+      })
+    }
+  }
+
+  handleChange = (e) => {
+    const value = e.target.value
+    const errorMessage = this.props.validate(value)
+    if (errorMessage) {
+      this.setState({
+        value,
+        errorMessage
+      }, () => this.props.onChange({target: {value, name: this.props.name}}, errorMessage))
+    } else {
+      this.setState({
+        value,
+        errorMessage: ''
+      }, () => this.props.onChange({target: {value, name: this.props.name}}, errorMessage))
+    }
+  }
+  
+  render() {
+    const {name, placeholder} = this.props;
+    const {value, errorMessage} = this.state;
+    
+    return (
+      <div>
+        <input type='text' name={name} placeholder={placeholder} value={value} onChange={this.handleChange} />{' '}
+        <span>{errorMessage}</span><br/>
       </div>
     )
   }
@@ -178,9 +260,13 @@ client = (function() {
     }
     setTimeout(() => cb(null, courses), 1000)
   }
+  const savePerson = (person, cb) => {
+    setTimeout(() => cb(null), 1000)
+  }
   return {
     getFaculties,
-    getCourses
+    getCourses,
+    savePerson
   }
 })()
 
